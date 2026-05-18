@@ -1,0 +1,16 @@
+# Dependinte
+node_modules/
+
+# Variabile de mediu (contin parole / secrete)
+.env
+
+# Loguri
+*.log
+npm-debug.log*
+
+# Acoperire teste
+coverage/
+
+# Sistem
+.DS_Store
+Thumbs.db
