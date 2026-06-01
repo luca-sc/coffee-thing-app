@@ -39,6 +39,35 @@ async function getAllOrders(req, res, next) {
     sql += ' ORDER BY created_at DESC';
 
     const [orders] = await pool.query(sql, params);
+
+    // atasam liniile fiecarei comenzi (cu numele si pretul produsului)
+    if (orders.length > 0) {
+      const orderIds = orders.map((o) => o.id);
+      const placeholders = orderIds.map(() => '?').join(',');
+      const [items] = await pool.query(
+        `SELECT oi.*, p.name AS product_name, p.price AS product_price
+           FROM order_items oi
+           JOIN products p ON p.id = oi.product_id
+          WHERE oi.order_id IN (${placeholders})`,
+        orderIds
+      );
+      const itemsByOrder = {};
+      for (const it of items) {
+        if (!itemsByOrder[it.order_id]) itemsByOrder[it.order_id] = [];
+        itemsByOrder[it.order_id].push({
+          id: it.id,
+          product_id: it.product_id,
+          quantity: it.quantity,
+          unit_price: it.unit_price,
+          line_total: it.line_total,
+          product: { id: it.product_id, name: it.product_name, price: it.product_price },
+        });
+      }
+      for (const o of orders) {
+        o.items = itemsByOrder[o.id] || [];
+      }
+    }
+
     return res.json({ success: true, data: orders });
   } catch (err) {
     next(err);
@@ -154,6 +183,9 @@ async function createOrder(req, res, next) {
     // --- salvarea in TRANZACTIE (totul sau nimic) ---
     await connection.beginTransaction();
 
+    // daca nu exista utilizator autentificat (test local), folosim created_by = 1
+    const createdBy = (req.user && req.user.id) ? req.user.id : 1;
+
     const [orderResult] = await connection.query(
       `INSERT INTO orders
          (customer_id, table_id, subtotal, discount, tax, total, created_by)
@@ -161,7 +193,7 @@ async function createOrder(req, res, next) {
       [
         customerId, tableId,
         totals.subtotal, totals.discount, totals.tax, totals.total,
-        req.user.id,
+        createdBy,
       ]
     );
     const orderId = orderResult.insertId;
@@ -257,9 +289,82 @@ async function updateOrderStatus(req, res, next) {
   }
 }
 
+/**
+ * POST /api/orders/:id/items
+ * Adauga un item la comanda existenta.
+ */
+async function addItemToOrder(req, res, next) {
+  const connection = await pool.getConnection();
+  try {
+    const orderId = req.params.id;
+    const { productId, quantity } = req.body || {};
+    if (!productId || !quantity) {
+      return res.status(400).json({ success: false, error: 'Missing productId or quantity' });
+    }
+
+    // verifica comanda
+    const [orders] = await connection.query('SELECT * FROM orders WHERE id = ?', [orderId]);
+    if (orders.length === 0) return res.status(404).json({ success: false, error: 'Order not found' });
+
+    // citeste pretul produsului
+    const [products] = await connection.query('SELECT id, price FROM products WHERE id = ?', [productId]);
+    if (products.length === 0) return res.status(404).json({ success: false, error: 'Product not found' });
+    const unitPrice = products[0].price;
+
+    // adauga linia
+    const lineTotal = orderService.roundMoney(unitPrice * quantity);
+    const [result] = await connection.query(
+      'INSERT INTO order_items (order_id, product_id, quantity, unit_price, line_total) VALUES (?, ?, ?, ?, ?)',
+      [orderId, productId, quantity, unitPrice, lineTotal]
+    );
+
+    // recalculare subtotal/total
+    const [items] = await connection.query('SELECT * FROM order_items WHERE order_id = ?', [orderId]);
+    const subtotal = items.reduce((s, it) => s + Number(it.line_total), 0);
+    await connection.query('UPDATE orders SET subtotal = ?, total = ? WHERE id = ?', [subtotal, subtotal, orderId]);
+
+    const [updatedItems] = await connection.query('SELECT * FROM order_items WHERE order_id = ?', [orderId]);
+    const [updatedOrder] = await connection.query('SELECT * FROM orders WHERE id = ?', [orderId]);
+
+    return res.json({ success: true, data: { ...updatedOrder[0], items: updatedItems } });
+  } catch (err) {
+    next(err);
+  } finally {
+    connection.release();
+  }
+}
+
+/**
+ * DELETE /api/orders/:id/items/:itemId
+ */
+async function removeItemFromOrder(req, res, next) {
+  const connection = await pool.getConnection();
+  try {
+    const { id: orderId, itemId } = req.params;
+    const [items] = await connection.query('SELECT * FROM order_items WHERE id = ? AND order_id = ?', [itemId, orderId]);
+    if (items.length === 0) return res.status(404).json({ success: false, error: 'Item not found' });
+
+    await connection.query('DELETE FROM order_items WHERE id = ?', [itemId]);
+
+    const [remaining] = await connection.query('SELECT * FROM order_items WHERE order_id = ?', [orderId]);
+    const subtotal = remaining.reduce((s, it) => s + Number(it.line_total), 0);
+    await connection.query('UPDATE orders SET subtotal = ?, total = ? WHERE id = ?', [subtotal, subtotal, orderId]);
+
+    const [updatedOrder] = await connection.query('SELECT * FROM orders WHERE id = ?', [orderId]);
+    return res.json({ success: true, data: updatedOrder[0] });
+  } catch (err) {
+    next(err);
+  } finally {
+    connection.release();
+  }
+}
+
 module.exports = {
   getAllOrders,
   getOrderById,
   createOrder,
   updateOrderStatus,
+  addItemToOrder,
+  removeItemFromOrder,
 };
+

@@ -17,6 +17,7 @@
 -- ---------------------------------------------------------------------
 -- Ordinea de stergere respecta cheile straine (copiii inaintea parintilor)
 -- ---------------------------------------------------------------------
+use coffee_thing;
 DROP TABLE IF EXISTS order_items;
 DROP TABLE IF EXISTS orders;
 DROP TABLE IF EXISTS customers;
@@ -84,6 +85,7 @@ CREATE TABLE customers (
   name       VARCHAR(100) NOT NULL,
   table_id   INT NOT NULL,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  left_at    TIMESTAMP NULL DEFAULT NULL,
   CONSTRAINT fk_customers_table
     FOREIGN KEY (table_id) REFERENCES tables_seating(id)
     ON DELETE CASCADE

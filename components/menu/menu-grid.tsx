@@ -1,26 +1,47 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Coffee } from 'lucide-react';
-import { mockProducts } from '@/data/mock-data';
-import { ProductCategory } from '@/types';
+// products are loaded from backend API
+import { ProductCategory, Product } from '@/types';
 import { MenuFilters } from './menu-filters';
 import { ProductCard } from './product-card';
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
 export function MenuGrid() {
   const [selectedCategory, setSelectedCategory] = useState<ProductCategory | 'all'>('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [products, setProducts] = useState<Product[]>([]);
+
+  useEffect(() => {
+    let mounted = true;
+    fetch(`${API_URL}/api/products`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (!mounted) return;
+        // backend returns { success: true, data: [...] }
+        if (Array.isArray(data)) setProducts(data);
+        else if (data && Array.isArray(data.data)) setProducts(data.data);
+      })
+      .catch(() => {
+        // keep products empty on error
+      });
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const filteredProducts = useMemo(() => {
-    return mockProducts.filter((product) => {
+    return products.filter((product) => {
       const matchesCategory = selectedCategory === 'all' || product.category === selectedCategory;
-      const matchesSearch = searchQuery === '' || 
+      const matchesSearch = searchQuery === '' ||
         product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         product.description.toLowerCase().includes(searchQuery.toLowerCase());
       return matchesCategory && matchesSearch;
     });
-  }, [selectedCategory, searchQuery]);
+  }, [selectedCategory, searchQuery, products]);
 
   return (
     <div className="space-y-8">
@@ -58,7 +79,7 @@ export function MenuGrid() {
 
       {/* Results count */}
       <div className="text-center text-muted-foreground text-sm">
-        Showing {filteredProducts.length} of {mockProducts.length} items
+        Showing {filteredProducts.length} of {products.length} items
       </div>
     </div>
   );

@@ -31,7 +31,7 @@ const statusLabels = {
 export function TableCard({ table }: TableCardProps) {
   const { selectTable, selectedTable } = useTableStore();
   const isSelected = selectedTable?.id === table.id;
-  const customerCount = table.currentCustomers.length;
+  const customerCount = table.currentCustomers?.length ?? 0;
 
   return (
     <motion.button

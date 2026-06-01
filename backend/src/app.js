@@ -14,6 +14,10 @@ require('dotenv').config();
 const authRoutes = require('./routes/authRoutes');
 const productRoutes = require('./routes/productRoutes');
 const orderRoutes = require('./routes/orderRoutes');
+const testimonialRoutes = require('./routes/testimonialRoutes');
+const tableRoutes = require('./routes/tableRoutes');
+const customerRoutes = require('./routes/customerRoutes');
+const paymentRoutes = require('./routes/paymentRoutes');
 const { notFound, errorHandler } = require('./middleware/errorHandler');
 
 const app = express();
@@ -36,6 +40,10 @@ app.get('/api/health', (_req, res) => {
 app.use('/api/auth', authRoutes);          // Task 1: autentificare
 app.use('/api/products', productRoutes);   // Task 3: CRUD
 app.use('/api/orders', orderRoutes);       // Task 2: logica de business
+app.use('/api/testimonials', testimonialRoutes);
+app.use('/api/tables', tableRoutes);
+app.use('/api/customers', customerRoutes);
+app.use('/api/orders', paymentRoutes); // payment subroutes on orders
 
 // --- tratarea erorilor (trebuie inregistrate ultimele) ---
 app.use(notFound);

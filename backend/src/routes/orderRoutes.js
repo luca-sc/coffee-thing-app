@@ -15,6 +15,8 @@ const {
   getOrderById,
   createOrder,
   updateOrderStatus,
+  addItemToOrder,
+  removeItemFromOrder,
 } = require('../controllers/orderController');
 const { authenticate } = require('../middleware/authMiddleware');
 
@@ -24,6 +26,8 @@ router.use(authenticate);
 router.get('/', getAllOrders);
 router.get('/:id', getOrderById);
 router.post('/', createOrder);
+router.post('/:id/items', addItemToOrder);
+router.delete('/:id/items/:itemId', removeItemFromOrder);
 router.put('/:id/status', updateOrderStatus);
 
 module.exports = router;

@@ -1,89 +1,129 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { mockProducts, categoryLabels } from '@/data/mock-data';
+import { Product } from '@/types';
 
-const featuredProducts = mockProducts.slice(0, 6);
+const API_URL =
+  process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+
+const categoryLabels: Record<string, string> = {
+  coffee: 'Coffee',
+  espresso: 'Espresso',
+  tea: 'Tea',
+  desserts: 'Desserts',
+  'cold-drinks': 'Cold Drinks',
+  breakfast: 'Breakfast',
+};
 
 export function FeaturedProducts() {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  const fetchProducts = async () => {
+    try {
+      const res = await fetch(`${API_URL}/api/products`);
+
+      const data = await res.json();
+
+      if (data.success) {
+        setProducts(data.data.slice(0, 6));
+      } else {
+        setProducts([]);
+      }
+    } catch (err) {
+      console.error(err);
+      setProducts([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <section className="py-20">
+        <div className="container mx-auto px-4">
+          Loading...
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section className="py-20 bg-secondary/30">
       <div className="container mx-auto px-4">
+
+        {/* HEADER */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           className="text-center mb-12"
         >
-          <span className="text-primary font-medium">Our Selection</span>
-          <h2 className="font-serif text-4xl md:text-5xl font-bold text-foreground mt-2 mb-4">
+          <span className="text-primary font-medium">
+            Our Selection
+          </span>
+
+          <h2 className="text-4xl font-bold mt-2 mb-4">
             Featured Favorites
           </h2>
+
           <p className="text-muted-foreground max-w-2xl mx-auto">
-            Discover our most beloved creations, crafted with passion and the finest ingredients.
+            Discover our most beloved creations.
           </p>
         </motion.div>
 
+        {/* PRODUCTS */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {featuredProducts.map((product, index) => (
+          {products.map((product, index) => (
             <motion.div
               key={product.id}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
               transition={{ delay: index * 0.1 }}
-              className="group bg-card rounded-xl overflow-hidden border border-border hover:border-primary/50 transition-all duration-300"
+              className="bg-card border rounded-xl p-5"
             >
-              {/* Product Image Placeholder */}
-              <div className="aspect-square bg-muted relative overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-br from-coffee/20 to-transparent" />
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-6xl opacity-50">☕</span>
-                </div>
-                <div className="absolute top-3 left-3">
-                  <span className="px-3 py-1 bg-primary/90 text-primary-foreground text-xs font-medium rounded-full">
-                    {categoryLabels[product.category]}
-                  </span>
-                </div>
-              </div>
+              <div className="text-5xl mb-2">☕</div>
 
-              {/* Product Info */}
-              <div className="p-5">
-                <h3 className="font-serif text-xl font-semibold text-foreground mb-2 group-hover:text-primary transition-colors">
-                  {product.name}
-                </h3>
-                <p className="text-muted-foreground text-sm mb-4 line-clamp-2">
-                  {product.description}
-                </p>
-                <div className="flex items-center justify-between">
-                  <span className="font-serif text-2xl font-bold text-primary">
-                    ${product.price.toFixed(2)}
-                  </span>
-                  <Button size="sm" variant="outline" asChild>
-                    <Link href="/menu">Order Now</Link>
-                  </Button>
-                </div>
+              <h3 className="text-xl font-semibold">
+                {product.name}
+              </h3>
+
+              <p className="text-sm text-muted-foreground mb-3">
+                {product.description}
+              </p>
+
+              <div className="flex justify-between items-center">
+                <span className="text-primary font-bold text-xl">
+                  ${Number(product.price).toFixed(2)}
+                </span>
+
+                <span className="text-xs bg-primary/10 px-2 py-1 rounded">
+                  {categoryLabels[product.category] ??
+                    product.category}
+                </span>
               </div>
             </motion.div>
           ))}
         </div>
 
-        <motion.div
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          className="text-center mt-12"
-        >
-          <Button size="lg" asChild>
+        {/* BUTTON */}
+        <div className="text-center mt-10">
+          <Button asChild>
             <Link href="/menu">
               View Full Menu
-              <ArrowRight className="ml-2 h-5 w-5" />
+              <ArrowRight className="ml-2 w-4 h-4" />
             </Link>
           </Button>
-        </motion.div>
+        </div>
+
       </div>
     </section>
   );

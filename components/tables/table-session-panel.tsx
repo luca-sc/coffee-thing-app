@@ -1,6 +1,6 @@
-'use client';
+ 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   X, Users, Plus, Check, Coffee, ChevronDown, ChevronUp, 
@@ -13,7 +13,8 @@ import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { mockProducts, categoryLabels } from '@/data/mock-data';
+import { categoryLabels } from '@/lib/constants';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 import { Product, ProductCategory, Order } from '@/types';
 
 const getStatusInfo = (status: Order['status']) => {
@@ -55,6 +56,22 @@ export function TableSessionPanel() {
   const [expandedCustomers, setExpandedCustomers] = useState<Record<string, boolean>>({});
   const [customerMenuOpen, setCustomerMenuOpen] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<ProductCategory>('coffee');
+  const [products, setProducts] = useState<Product[]>([]);
+
+  useEffect(() => {
+    let mounted = true;
+    fetch(`${API_URL}/api/products`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (!mounted) return;
+        if (Array.isArray(data)) setProducts(data);
+        else if (data && Array.isArray(data.data)) setProducts(data.data);
+      })
+      .catch(() => {});
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   if (!selectedTable) {
     return (
@@ -111,14 +128,22 @@ export function TableSessionPanel() {
     toast.success(`${validNames.length} clienti adaugati la Masa #${selectedTable.number}`);
   };
 
-  const handleRemoveCustomer = (customerId: string, customerName: string) => {
-    removeCustomerFromTable(customerId);
-    toast.success(`${customerName} a fost eliminat de la masa`);
+  const handleRemoveCustomer = async (customerId: string, customerName: string) => {
+    try {
+      await removeCustomerFromTable(customerId);
+      toast.success(`${customerName} a fost eliminat de la masa`);
+    } catch (err: any) {
+      toast.error(err?.message || 'Eroare la stergerea clientului. Verifica comenzile.');
+    }
   };
 
-  const handleCloseSession = () => {
-    closeTableSession(selectedTable.id);
-    toast.success(`Sesiunea Mesei #${selectedTable.number} a fost inchisa`);
+  const handleCloseSession = async () => {
+    try {
+      await closeTableSession(selectedTable.id);
+      toast.success(`Sesiunea Mesei #${selectedTable.number} a fost inchisa`);
+    } catch (err: any) {
+      toast.error(err?.message || 'Eroare la inchiderea sesiunii. Verifica comenzile.');
+    }
   };
 
   const toggleCustomerExpanded = (customerId: string) => {
@@ -132,27 +157,44 @@ export function TableSessionPanel() {
     setCustomerMenuOpen(prev => prev === customerId ? null : customerId);
   };
 
-  const handleAddProductToCustomer = (customerId: string, product: Product) => {
+  const handleAddProductToCustomer = async (customerId: string, product: Product) => {
     const customerOrders = getCustomerOrders(customerId);
-    let activeOrder = customerOrders.find(o => o.paymentStatus !== 'paid');
+    const activeOrder = customerOrders.find(o => o.paymentStatus !== 'paid');
 
     if (!activeOrder) {
-      activeOrder = createOrder(customerId, selectedTable.id);
+      await createOrder(customerId, selectedTable.id, [{ product, quantity: 1 }]);
+    } else {
+      await addItemToOrder(activeOrder.id, product, 1);
     }
-
-    addItemToOrder(activeOrder.id, product, 1);
     toast.success(`${product.name} adaugat pentru client`);
   };
 
-  const handleRemoveItemFromOrder = (orderId: string, itemId: string) => {
-    removeItemFromOrder(orderId, itemId);
+  const handleRemoveItemFromOrder = async (orderId: string, itemId: string) => {
+    await removeItemFromOrder(orderId, itemId);
     toast.success('Produs eliminat din comanda');
   };
 
-  const handlePayOrder = (orderId: string, method: 'cash' | 'card') => {
-    setPaymentMethod(orderId, method);
-    markOrderPaid(orderId);
-    toast.success(`Comanda platita cu ${method === 'card' ? 'card' : 'cash'}`);
+  const handlePayOrder = async (orderId: string, method: 'cash' | 'card', customerId: string, customerName: string) => {
+    try {
+      await setPaymentMethod(orderId, method);
+      await markOrderPaid(orderId);
+
+      // after marking paid, check if customer has any unpaid orders
+      const ordersAfter = getCustomerOrders(customerId);
+      const hasUnpaidOrders = ordersAfter.some(o => o.paymentStatus !== 'paid');
+      if (!hasUnpaidOrders) {
+        try {
+          await removeCustomerFromTable(customerId);
+          toast.success(`${customerName} a fost eliminat de la masa`);
+        } catch (err: any) {
+          toast.error(err?.message || 'Eroare la stergerea clientului dupa plata');
+        }
+      } else {
+        toast.success(`Comanda platita cu ${method === 'card' ? 'card' : 'cash'}`);
+      }
+    } catch (err: any) {
+      toast.error(err?.message || 'Eroare la procesarea platii');
+    }
   };
 
   // Simulate order progression for demo
@@ -167,7 +209,7 @@ export function TableSessionPanel() {
   };
 
   const categories = Object.keys(categoryLabels) as ProductCategory[];
-  const filteredProducts = mockProducts.filter(p => p.category === selectedCategory && p.available);
+  const filteredProducts = products.filter(p => p.category === selectedCategory && p.available);
 
   return (
     <motion.div
@@ -207,7 +249,7 @@ export function TableSessionPanel() {
       </div>
 
       {/* Content */}
-      <ScrollArea className="h-[600px]">
+      <ScrollArea className="h-150">
         <div className="p-4 space-y-4">
           {/* Add Customers Form - shown when table is free */}
           {isTableFree && !showAddCustomers && (
@@ -528,7 +570,7 @@ export function TableSessionPanel() {
                                               size="sm"
                                               variant="outline"
                                               className="flex-1"
-                                              onClick={() => handlePayOrder(order.id, 'card')}
+                                              onClick={() => handlePayOrder(order.id, 'card', customer.id, customer.name)}
                                             >
                                               <CreditCard className="h-4 w-4 mr-1" />
                                               Card
@@ -537,7 +579,7 @@ export function TableSessionPanel() {
                                               size="sm"
                                               variant="outline"
                                               className="flex-1"
-                                              onClick={() => handlePayOrder(order.id, 'cash')}
+                                              onClick={() => handlePayOrder(order.id, 'cash', customer.id, customer.name)}
                                             >
                                               <Banknote className="h-4 w-4 mr-1" />
                                               Cash

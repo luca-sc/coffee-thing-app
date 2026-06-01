@@ -1,19 +1,10 @@
-import { AdminAuthGuard } from '@/components/admin/admin-auth-guard';
-import { AdminSidebar } from '@/components/admin/admin-sidebar';
-
-export default function AdminLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function AdminDashboardLayout({ children }: { children: React.ReactNode }) {
+  // The global admin layout (`app/admin/layout.tsx`) renders the sidebar
+  // and applies authentication. Here we only provide the content wrapper
+  // for dashboard routes to avoid rendering the sidebar twice.
   return (
-    <AdminAuthGuard>
-      <div className="flex min-h-screen bg-background">
-        <AdminSidebar />
-        <main className="flex-1 overflow-auto">
-          {children}
-        </main>
-      </div>
-    </AdminAuthGuard>
+    <div className="flex-1 overflow-auto">
+      {children}
+    </div>
   );
 }

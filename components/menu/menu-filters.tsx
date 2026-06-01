@@ -6,7 +6,7 @@ import { Search, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ProductCategory } from '@/types';
-import { categoryLabels } from '@/data/mock-data';
+import { categoryLabels } from '@/lib/constants';
 import { cn } from '@/lib/utils';
 
 interface MenuFiltersProps {

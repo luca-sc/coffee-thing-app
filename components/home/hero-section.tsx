@@ -1,6 +1,8 @@
-'use client';
+ 'use client';
 
 import { motion } from 'framer-motion';
+import { useEffect, useState } from 'react';
+import { ClientAnimatedBeans } from './client-animated-beans';
 import Link from 'next/link';
 import { ArrowRight, Coffee, Clock, Award } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -11,30 +13,8 @@ export function HeroSection() {
       {/* Background with overlay */}
       <div className="absolute inset-0 bg-gradient-to-br from-espresso via-background to-coffee-dark" />
       
-      {/* Animated coffee beans decoration */}
-      <div className="absolute inset-0 overflow-hidden">
-        {[...Array(20)].map((_, i) => (
-          <motion.div
-            key={i}
-            className="absolute w-2 h-2 rounded-full bg-primary/20"
-            initial={{
-              x: Math.random() * 100 + '%',
-              y: -20,
-              opacity: 0.3,
-            }}
-            animate={{
-              y: '120vh',
-              rotate: 360,
-            }}
-            transition={{
-              duration: Math.random() * 10 + 15,
-              repeat: Infinity,
-              ease: 'linear',
-              delay: Math.random() * 5,
-            }}
-          />
-        ))}
-      </div>
+      {/* Animated coffee beans decoration (render only on client to avoid hydration mismatch) */}
+      <ClientAnimatedBeans />
 
       {/* Content */}
       <div className="relative z-10 container mx-auto px-4 pt-20">

@@ -3,7 +3,7 @@
 import { motion } from 'framer-motion';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { useTableStore } from '@/store/table-store';
-import { mockProducts, categoryLabels } from '@/data/mock-data';
+import { categoryLabels } from '@/lib/constants';
 
 const COLORS = ['#c4a574', '#8b7355', '#6b5344', '#d4b896', '#a08060', '#5a4534'];
 

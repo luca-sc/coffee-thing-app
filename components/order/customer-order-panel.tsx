@@ -1,324 +1,319 @@
-'use client';
+ 'use client';
 
-import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { ShoppingBag, Plus, Minus, Trash2, CreditCard, Banknote, Check, ArrowLeft } from 'lucide-react';
-import { useTableStore } from '@/store/table-store';
-import { mockProducts, categoryLabels } from '@/data/mock-data';
+import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import {
+  ShoppingBag,
+  Plus,
+  Minus,
+  Trash2,
+  CreditCard,
+  Banknote,
+  Check,
+  ArrowLeft
+} from 'lucide-react';
+
+import { categoryLabels } from '@/lib/constants';
+import { Product, ProductCategory } from '@/types';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
-import { Product, ProductCategory, PaymentMethod } from '@/types';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { authHeaders } from '@/lib/api';
 
-interface CustomerOrderPanelProps {
+interface Props {
   customerId: string;
+  tableId: string;
+  customerName: string;
   onClose: () => void;
 }
 
-export function CustomerOrderPanel({ customerId, onClose }: CustomerOrderPanelProps) {
-  const {
-    customers,
-    getCustomerOrders,
-    createOrder,
-    addItemToOrder,
-    removeItemFromOrder,
-    updateOrderStatus,
-    setPaymentMethod,
-    markOrderPaid,
-  } = useTableStore();
+const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
-  const [selectedCategory, setSelectedCategory] = useState<ProductCategory | 'all'>('all');
-  const [localCart, setLocalCart] = useState<{ product: Product; quantity: number }[]>([]);
+// load products from backend
 
-  const customer = customers.find(c => c.id === customerId);
-  const orders = getCustomerOrders(customerId);
-  const activeOrder = orders.find(o => o.status !== 'paid');
 
-  if (!customer) return null;
+export function CustomerOrderPanel({
+  customerId,
+  tableId,
+  customerName,
+  onClose
+}: Props) {
 
-  const filteredProducts = mockProducts.filter(
+  const [selectedCategory, setSelectedCategory] =
+    useState<ProductCategory | 'all'>('all');
+
+  const [localCart, setLocalCart] = useState<
+    { product: Product; quantity: number }[]
+  >([]);
+
+  const [orders, setOrders] = useState<any[]>([]);
+
+  const [products, setProducts] = useState<Product[]>([]);
+
+  useEffect(() => {
+    let mounted = true;
+    fetch(`${API}/api/products`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (!mounted) return;
+        if (Array.isArray(data)) setProducts(data);
+        else if (data && Array.isArray(data.data)) setProducts(data.data);
+      })
+      .catch(() => {});
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const filteredProducts = products.filter(
     p => selectedCategory === 'all' || p.category === selectedCategory
   );
 
-  const cartTotal = localCart.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
+  const cartTotal = localCart.reduce(
+    (sum, item) => sum + item.product.price * item.quantity,
+    0
+  );
 
-  const handleAddToCart = (product: Product) => {
+  // ================= CART =================
+
+  const addToCart = (product: Product) => {
     setLocalCart(prev => {
-      const existing = prev.find(item => item.product.id === product.id);
-      if (existing) {
-        return prev.map(item =>
-          item.product.id === product.id
-            ? { ...item, quantity: item.quantity + 1 }
-            : item
+      const found = prev.find(p => p.product.id === product.id);
+
+      if (found) {
+        return prev.map(p =>
+          p.product.id === product.id
+            ? { ...p, quantity: p.quantity + 1 }
+            : p
         );
       }
+
       return [...prev, { product, quantity: 1 }];
     });
   };
 
-  const handleRemoveFromCart = (productId: string) => {
-    setLocalCart(prev => prev.filter(item => item.product.id !== productId));
-  };
-
-  const handleUpdateCartQuantity = (productId: string, delta: number) => {
+  const updateQty = (id: string, delta: number) => {
     setLocalCart(prev =>
       prev
-        .map(item =>
-          item.product.id === productId
-            ? { ...item, quantity: Math.max(0, item.quantity + delta) }
-            : item
+        .map(p =>
+          p.product.id === id
+            ? { ...p, quantity: Math.max(0, p.quantity + delta) }
+            : p
         )
-        .filter(item => item.quantity > 0)
+        .filter(p => p.quantity > 0)
     );
   };
 
-  const handleSubmitOrder = () => {
+  const removeItem = (id: string) => {
+    setLocalCart(prev => prev.filter(p => p.product.id !== id));
+  };
+
+  // ================= CREATE ORDER (MYSQL) =================
+
+  const submitOrder = async () => {
     if (localCart.length === 0) {
-      toast.error('Add items to cart first');
+      toast.error("Cart is empty");
       return;
     }
 
-    // Create a new order or use existing active order
-    let orderId = activeOrder?.id;
-    if (!orderId) {
-      const newOrder = createOrder(customerId, customer.tableId);
-      orderId = newOrder.id;
+    try {
+      const res = await fetch(`${API}/api/orders`, {
+        method: "POST",
+        headers: authHeaders(),
+        body: JSON.stringify({
+          customerId,
+          tableId,
+          items: localCart.map(i => ({
+            productId: i.product.id,
+            quantity: i.quantity
+          }))
+        })
+      });
+
+      const data = await res.json();
+
+      if (!data.success) {
+        toast.error(data.error || "Order failed");
+        return;
+      }
+
+      setOrders(prev => [...prev, data.data]);
+      setLocalCart([]);
+
+      toast.success("Order saved to MySQL ✅");
+    } catch (err) {
+      toast.error("Server error");
     }
-
-    // Add items to order
-    localCart.forEach(item => {
-      addItemToOrder(orderId!, item.product, item.quantity);
-    });
-
-    setLocalCart([]);
-    toast.success('Order submitted successfully!');
   };
 
-  const categories: (ProductCategory | 'all')[] = ['all', 'coffee', 'espresso', 'tea', 'desserts', 'cold-drinks', 'breakfast'];
+  // ================= PAYMENT =================
+
+  const setPayment = async (orderId: string, method: string) => {
+    await fetch(`${API}/api/orders/${orderId}/payment-method`, {
+      method: "PUT",
+      headers: authHeaders(),
+      body: JSON.stringify({ method })
+    });
+
+    toast.success("Payment method set");
+  };
+
+  const payOrder = async (orderId: string) => {
+    await fetch(`${API}/api/orders/${orderId}/pay`, {
+      method: "PUT",
+      headers: authHeaders(false)
+    });
+
+    setOrders(prev =>
+      prev.map(o =>
+        o.id === orderId ? { ...o, paymentStatus: "paid" } : o
+      )
+    );
+
+    toast.success("Paid successfully");
+  };
+
+  // ================= UI =================
+
+  const categories: (ProductCategory | 'all')[] = [
+    'all',
+    'coffee',
+    'espresso',
+    'tea',
+    'desserts',
+    'cold-drinks',
+    'breakfast'
+  ];
 
   return (
     <div className="fixed inset-0 z-50 bg-background flex flex-col">
-      {/* Header */}
-      <div className="border-b border-border p-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={onClose}>
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <div>
-            <h2 className="font-serif text-xl font-semibold">{customer.name}&apos;s Order</h2>
-            <p className="text-sm text-muted-foreground">Table #{customer.tableId.replace('table-', '')}</p>
-          </div>
+
+      {/* HEADER */}
+      <div className="p-4 border-b flex justify-between">
+        <div>
+          <h2 className="font-bold text-xl">{customerName}</h2>
+          <p className="text-sm text-muted-foreground">
+            Table #{tableId.replace('table-', '')}
+          </p>
         </div>
+
+        <Button variant="ghost" onClick={onClose}>
+          <ArrowLeft />
+        </Button>
       </div>
 
-      <div className="flex-1 flex overflow-hidden">
-        {/* Products Section */}
-        <div className="flex-1 flex flex-col overflow-hidden">
-          {/* Category Filters */}
-          <div className="p-4 border-b border-border">
-            <div className="flex flex-wrap gap-2">
-              {categories.map(cat => (
-                <Button
-                  key={cat}
-                  variant={selectedCategory === cat ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setSelectedCategory(cat)}
-                >
-                  {cat === 'all' ? 'All' : categoryLabels[cat]}
-                </Button>
-              ))}
-            </div>
+      <div className="flex flex-1 overflow-hidden">
+
+        {/* PRODUCTS */}
+        <div className="flex-1 p-4 overflow-hidden">
+
+          <div className="flex gap-2 mb-3 flex-wrap">
+            {categories.map(c => (
+              <Button
+                key={c}
+                size="sm"
+                variant={selectedCategory === c ? "default" : "outline"}
+                onClick={() => setSelectedCategory(c)}
+              >
+                {c === "all" ? "All" : categoryLabels[c]}
+              </Button>
+            ))}
           </div>
 
-          {/* Products Grid */}
-          <ScrollArea className="flex-1 p-4">
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-              {filteredProducts.map(product => {
-                const cartItem = localCart.find(i => i.product.id === product.id);
-                return (
-                  <motion.button
-                    key={product.id}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => handleAddToCart(product)}
-                    className={cn(
-                      'p-3 rounded-lg border text-left transition-all',
-                      cartItem ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'
-                    )}
-                  >
-                    <div className="aspect-square bg-muted rounded-md mb-2 flex items-center justify-center text-3xl">
-                      ☕
-                    </div>
-                    <h4 className="font-medium text-sm text-foreground line-clamp-1">{product.name}</h4>
-                    <div className="flex items-center justify-between mt-1">
-                      <span className="text-primary font-semibold">${product.price.toFixed(2)}</span>
-                      {cartItem && (
-                        <Badge variant="secondary" className="text-xs">
-                          x{cartItem.quantity}
-                        </Badge>
-                      )}
-                    </div>
-                  </motion.button>
-                );
-              })}
+          <ScrollArea className="h-full">
+            <div className="grid grid-cols-2 gap-3">
+
+              {filteredProducts.map(p => (
+                <motion.div
+                  key={p.id}
+                  whileTap={{ scale: 0.95 }}
+                  className="border p-3 rounded cursor-pointer"
+                  onClick={() => addToCart(p)}
+                >
+                  <div className="text-lg">☕</div>
+                  <div className="font-medium">{p.name}</div>
+                  <div className="text-primary">${p.price}</div>
+                </motion.div>
+              ))}
+
             </div>
           </ScrollArea>
         </div>
 
-        {/* Cart & Orders Sidebar */}
-        <div className="w-80 border-l border-border flex flex-col bg-card">
-          {/* Current Cart */}
-          <div className="p-4 border-b border-border">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="font-semibold flex items-center gap-2">
-                <ShoppingBag className="h-4 w-4" />
-                Current Cart
-              </h3>
-              {localCart.length > 0 && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setLocalCart([])}
-                  className="text-destructive text-xs"
-                >
-                  Clear
+        {/* CART */}
+        <div className="w-80 border-l p-4 flex flex-col">
+
+          <h3 className="font-bold mb-2 flex items-center gap-2">
+            <ShoppingBag /> Cart
+          </h3>
+
+          {localCart.map(i => (
+            <div key={i.product.id} className="flex justify-between mb-2">
+              <div>
+                {i.product.name} x{i.quantity}
+              </div>
+
+              <div className="flex gap-1">
+                <Button size="icon" onClick={() => updateQty(i.product.id, -1)}>
+                  <Minus />
                 </Button>
-              )}
+
+                <Button size="icon" onClick={() => updateQty(i.product.id, 1)}>
+                  <Plus />
+                </Button>
+
+                <Button size="icon" onClick={() => removeItem(i.product.id)}>
+                  <Trash2 />
+                </Button>
+              </div>
+            </div>
+          ))}
+
+          <div className="mt-auto">
+            <div className="mb-2">
+              Total: ${cartTotal.toFixed(2)}
             </div>
 
-            {localCart.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-4">
-                Tap products to add to cart
-              </p>
-            ) : (
-              <div className="space-y-2 max-h-48 overflow-y-auto">
-                {localCart.map(item => (
-                  <div key={item.product.id} className="flex items-center gap-2 text-sm">
-                    <div className="flex-1 min-w-0">
-                      <p className="truncate text-foreground">{item.product.name}</p>
-                      <p className="text-muted-foreground">${(item.product.price * item.quantity).toFixed(2)}</p>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className="h-6 w-6"
-                        onClick={() => handleUpdateCartQuantity(item.product.id, -1)}
-                      >
-                        <Minus className="h-3 w-3" />
-                      </Button>
-                      <span className="w-6 text-center">{item.quantity}</span>
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className="h-6 w-6"
-                        onClick={() => handleUpdateCartQuantity(item.product.id, 1)}
-                      >
-                        <Plus className="h-3 w-3" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-6 w-6 text-destructive"
-                        onClick={() => handleRemoveFromCart(item.product.id)}
-                      >
-                        <Trash2 className="h-3 w-3" />
-                      </Button>
-                    </div>
+            <Button className="w-full" onClick={submitOrder}>
+              Submit Order
+            </Button>
+          </div>
+
+          {/* ORDERS */}
+          <div className="mt-4">
+            <h4 className="font-bold">Orders</h4>
+
+            {orders.map(o => (
+              <div key={o.id} className="border p-2 mt-2">
+
+                <Badge>{o.status}</Badge>
+
+                <div className="text-sm">
+                  ${o.total}
+                </div>
+
+                {o.paymentStatus !== "paid" && (
+                  <div className="flex gap-2 mt-2">
+                    <Button size="sm" onClick={() => setPayment(o.id, "cash")}>
+                      Cash
+                    </Button>
+
+                    <Button size="sm" onClick={() => setPayment(o.id, "card")}>
+                      Card
+                    </Button>
+
+                    <Button size="sm" onClick={() => payOrder(o.id)}>
+                      <Check /> Pay
+                    </Button>
                   </div>
-                ))}
-              </div>
-            )}
+                )}
 
-            {localCart.length > 0 && (
-              <div className="mt-3 pt-3 border-t border-border">
-                <div className="flex justify-between mb-3">
-                  <span className="text-muted-foreground">Total</span>
-                  <span className="font-semibold text-primary">${cartTotal.toFixed(2)}</span>
-                </div>
-                <Button className="w-full" onClick={handleSubmitOrder}>
-                  Submit Order
-                </Button>
               </div>
-            )}
+            ))}
           </div>
 
-          {/* Previous Orders */}
-          <div className="flex-1 p-4 overflow-hidden flex flex-col">
-            <h3 className="font-semibold mb-3">Order History</h3>
-            <ScrollArea className="flex-1">
-              {orders.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-4">
-                  No orders yet
-                </p>
-              ) : (
-                <div className="space-y-3">
-                  {orders.map(order => (
-                    <div key={order.id} className="p-3 bg-secondary/50 rounded-lg space-y-2">
-                      <div className="flex items-center justify-between">
-                        <Badge variant={
-                          order.status === 'paid' ? 'default' :
-                          order.status === 'ready' || order.status === 'delivered' ? 'secondary' :
-                          'outline'
-                        }>
-                          {order.status}
-                        </Badge>
-                        <span className="font-semibold text-primary">${order.total.toFixed(2)}</span>
-                      </div>
-
-                      {order.items.map(item => (
-                        <div key={item.id} className="flex justify-between text-xs text-muted-foreground">
-                          <span>{item.quantity}x {item.product.name}</span>
-                          <span>${item.price.toFixed(2)}</span>
-                        </div>
-                      ))}
-
-                      {order.paymentStatus !== 'paid' && (
-                        <div className="pt-2 border-t border-border space-y-2">
-                          {!order.paymentMethod ? (
-                            <div className="flex gap-2">
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="flex-1"
-                                onClick={() => setPaymentMethod(order.id, 'cash')}
-                              >
-                                <Banknote className="h-3 w-3 mr-1" />
-                                Cash
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="flex-1"
-                                onClick={() => setPaymentMethod(order.id, 'card')}
-                              >
-                                <CreditCard className="h-3 w-3 mr-1" />
-                                Card
-                              </Button>
-                            </div>
-                          ) : (
-                            <Button
-                              size="sm"
-                              className="w-full"
-                              onClick={() => {
-                                markOrderPaid(order.id);
-                                toast.success('Payment confirmed!');
-                              }}
-                            >
-                              <Check className="h-3 w-3 mr-1" />
-                              Confirm Payment
-                            </Button>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </ScrollArea>
-          </div>
         </div>
       </div>
     </div>

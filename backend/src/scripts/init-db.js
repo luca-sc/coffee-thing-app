@@ -22,6 +22,7 @@ const mysql = require('mysql2/promise');
 const bcrypt = require('bcryptjs');
 require('dotenv').config();
 
+
 // .trim() elimina spatiile accidentale (ex: NODE_ENV="test " pe Windows)
 const isTest = (process.env.NODE_ENV || '').trim() === 'test';
 const DB_NAME = isTest
@@ -60,7 +61,7 @@ async function initDatabase() {
     host: process.env.DB_HOST || 'localhost',
     port: process.env.DB_PORT || 3306,
     user: process.env.DB_USER || 'root',
-    password: process.env.DB_PASSWORD || '',
+    password: process.env.DB_PASSWORD || '1234',
     multipleStatements: true, // necesar pentru a rula tot fisierul schema.sql
   });
 

@@ -18,7 +18,7 @@ type Step = 'select-table' | 'select-customer' | 'confirm' | 'tracking' | 'payme
 
 export function CheckoutModal({ isOpen, onClose }: CheckoutModalProps) {
   const { items, getTotal, clearCart } = useCartStore();
-  const { tables, customers, orders, addCustomerToTable, createOrder, addItemToOrder, updateOrderStatus, setPaymentMethod, markOrderPaid, getTableCustomers } = useTableStore();
+  const { tables, customers, orders, addCustomerToTable, createOrder, updateOrderStatus, setPaymentMethod, markOrderPaid, getTableCustomers } = useTableStore();
   
   const [step, setStep] = useState<Step>('select-table');
   const [selectedTableId, setSelectedTableId] = useState<string | null>(null);
@@ -67,28 +67,23 @@ export function CheckoutModal({ isOpen, onClose }: CheckoutModalProps) {
     setStep('confirm');
   };
 
-  const handleAddNewCustomer = () => {
+  const handleAddNewCustomer = async () => {
     if (!newCustomerName.trim() || !selectedTableId) return;
-    const newCustomer = addCustomerToTable(selectedTableId, newCustomerName.trim());
+    const newCustomer = await addCustomerToTable(selectedTableId, newCustomerName.trim());
     setSelectedCustomerId(newCustomer.id);
     setNewCustomerName('');
     setStep('confirm');
   };
 
-  const handlePlaceOrder = () => {
+  const handlePlaceOrder = async () => {
     if (!selectedCustomerId || !selectedTableId) return;
 
-    // Create new order
-    const order = createOrder(selectedCustomerId, selectedTableId);
+    // Create new order with all cart items (backend requires at least one)
+    const order = await createOrder(selectedCustomerId, selectedTableId, items);
     setCurrentOrderId(order.id);
 
-    // Add all cart items to order
-    items.forEach(item => {
-      addItemToOrder(order.id, item.product, item.quantity);
-    });
-
     // Update status to preparing
-    updateOrderStatus(order.id, 'preparing');
+    await updateOrderStatus(order.id, 'preparing');
     
     // Clear cart and go to tracking
     clearCart();

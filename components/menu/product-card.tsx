@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Plus, Minus } from 'lucide-react';
 import { Product } from '@/types';
-import { categoryLabels } from '@/data/mock-data';
+import { categoryLabels } from '@/lib/constants';
 import { Button } from '@/components/ui/button';
 import { useCartStore } from '@/store/cart-store';
 import { toast } from 'sonner';
@@ -37,14 +37,19 @@ export function ProductCard({ product }: ProductCardProps) {
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.9 }}
       whileHover={{ y: -4 }}
-      className="bg-card rounded-xl overflow-hidden border border-border hover:border-primary/50 transition-all duration-300 group"
+      className="bg-card/95 rounded-xl overflow-hidden border border-border hover:border-primary/50 transition-all duration-300 group filter brightness-105"
     >
       {/* Product Image */}
-      <div className="aspect-[4/3] bg-muted relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-coffee/30 to-transparent" />
+      <div
+        className="aspect-4/3 relative overflow-hidden"
+        style={{
+          backgroundImage: 'linear-gradient(135deg, var(--color-cream) 0%, var(--color-coffee-light) 100%)',
+        }}
+      >
+        <div className="absolute inset-0 bg-linear-to-br from-white/20 to-transparent mix-blend-screen" />
         <div className="absolute inset-0 flex items-center justify-center">
-          <motion.span 
-            className="text-6xl opacity-60"
+          <motion.span
+            className="text-7xl opacity-100 drop-shadow-lg"
             whileHover={{ scale: 1.1, rotate: 10 }}
             transition={{ type: 'spring', stiffness: 300 }}
           >
@@ -68,7 +73,7 @@ export function ProductCard({ product }: ProductCardProps) {
         <h3 className="font-serif text-lg font-semibold text-foreground mb-1 group-hover:text-primary transition-colors">
           {product.name}
         </h3>
-        <p className="text-muted-foreground text-sm mb-4 line-clamp-2">
+        <p className="text-foreground text-sm mb-4 line-clamp-2">
           {product.description}
         </p>
 
