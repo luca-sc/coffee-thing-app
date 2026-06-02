@@ -7,6 +7,7 @@ import { Menu, X, Coffee, ShoppingCart } from 'lucide-react';
 import { useCartStore } from '@/store/cart-store';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { ModeToggle } from '../ui/mode-toggle';
 
 const navLinks = [
   { href: '/', label: 'Home' },
@@ -63,6 +64,8 @@ export function Navbar() {
 
           {/* Cart & Mobile Menu */}
           <div className="flex items-center gap-4">
+            <ModeToggle /> {/* <-- BUTONUL A FOST ADĂUGAT AICI, LÂNGĂ COȘ */}
+
             <Button
               variant="ghost"
               size="icon"

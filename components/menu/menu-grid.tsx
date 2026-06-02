@@ -3,7 +3,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Coffee } from 'lucide-react';
-// products are loaded from backend API
 import { ProductCategory, Product } from '@/types';
 import { MenuFilters } from './menu-filters';
 import { ProductCard } from './product-card';
@@ -14,19 +13,23 @@ export function MenuGrid() {
   const [selectedCategory, setSelectedCategory] = useState<ProductCategory | 'all'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [products, setProducts] = useState<Product[]>([]);
+  const [isLoading, setIsLoading] = useState(true); // <-- Adăugat pentru a controla starea animației
 
   useEffect(() => {
     let mounted = true;
+    setIsLoading(true);
     fetch(`${API_URL}/api/products`)
       .then((res) => res.json())
       .then((data) => {
         if (!mounted) return;
-        // backend returns { success: true, data: [...] }
         if (Array.isArray(data)) setProducts(data);
         else if (data && Array.isArray(data.data)) setProducts(data.data);
       })
       .catch(() => {
         // keep products empty on error
+      })
+      .finally(() => {
+        if (mounted) setIsLoading(false);
       });
     return () => {
       mounted = false;
@@ -52,7 +55,7 @@ export function MenuGrid() {
         onSearchChange={setSearchQuery}
       />
 
-      {filteredProducts.length === 0 ? (
+      {filteredProducts.length === 0 && !isLoading ? (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -65,8 +68,12 @@ export function MenuGrid() {
           </p>
         </motion.div>
       ) : (
+        /* Jocul de animații layout este înapoi, dar pornește la opacitate 100% când datele sunt gata */
         <motion.div 
           layout
+          initial={{ opacity: 0 }}
+          animate={{ opacity: isLoading ? 0.35 : 1 }}
+          transition={{ duration: 0.4 }}
           className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
         >
           <AnimatePresence mode="popLayout">

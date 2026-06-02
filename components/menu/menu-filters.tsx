@@ -59,7 +59,7 @@ export function MenuFilters({
           onChange={(e) => onSearchChange(e.target.value)}
           onFocus={() => setIsSearchFocused(true)}
           onBlur={() => setIsSearchFocused(false)}
-          className="pl-10 pr-10 h-12 bg-card border-border"
+          className="pl-10 pr-10 h-12 bg-card border-border text-foreground placeholder:text-muted-foreground focus-visible:ring-primary shadow-sm"
         />
         <AnimatePresence>
           {searchQuery && (
@@ -71,7 +71,7 @@ export function MenuFilters({
               <Button
                 variant="ghost"
                 size="icon"
-                className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8"
+                className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 text-muted-foreground hover:text-foreground"
                 onClick={() => onSearchChange('')}
               >
                 <X className="h-4 w-4" />
@@ -90,9 +90,9 @@ export function MenuFilters({
             whileTap={{ scale: 0.95 }}
             onClick={() => onCategoryChange(category)}
             className={cn(
-              "px-4 py-2 rounded-full text-sm font-medium transition-all flex items-center gap-2",
+              "px-4 py-2 rounded-full text-sm font-semibold transition-all flex items-center gap-2 shadow-xs cursor-pointer border border-border/40",
               selectedCategory === category
-                ? "bg-primary text-primary-foreground"
+                ? "bg-primary text-primary-foreground shadow-md"
                 : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
             )}
           >

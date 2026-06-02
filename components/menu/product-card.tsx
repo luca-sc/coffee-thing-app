@@ -37,7 +37,7 @@ export function ProductCard({ product }: ProductCardProps) {
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.9 }}
       whileHover={{ y: -4 }}
-      className="bg-card/95 rounded-xl overflow-hidden border border-border hover:border-primary/50 transition-all duration-300 group filter brightness-105"
+      className="bg-card rounded-xl overflow-hidden border border-border hover:border-primary/50 transition-all duration-300 group shadow-sm"
     >
       {/* Product Image */}
       <div
@@ -57,7 +57,7 @@ export function ProductCard({ product }: ProductCardProps) {
           </motion.span>
         </div>
         <div className="absolute top-3 left-3">
-          <span className="px-3 py-1 bg-primary/90 text-primary-foreground text-xs font-medium rounded-full">
+          <span className="px-3 py-1 bg-primary text-primary-foreground text-xs font-medium rounded-full shadow-sm">
             {categoryLabels[product.category]}
           </span>
         </div>
@@ -69,52 +69,56 @@ export function ProductCard({ product }: ProductCardProps) {
       </div>
 
       {/* Product Info */}
-      <div className="p-4">
-        <h3 className="font-serif text-lg font-semibold text-foreground mb-1 group-hover:text-primary transition-colors">
-          {product.name}
-        </h3>
-        <p className="text-foreground text-sm mb-4 line-clamp-2">
-          {product.description}
-        </p>
-
-        {/* Price */}
-        <div className="flex items-center justify-between mb-4">
-          <span className="font-serif text-2xl font-bold text-primary">
-            ${product.price.toFixed(2)}
-          </span>
+      <div className="p-4 flex flex-col justify-between">
+        <div>
+          <h3 className="font-serif text-lg font-bold text-foreground mb-1 group-hover:text-primary transition-colors">
+            {product.name}
+          </h3>
+          <p className="text-muted-foreground text-sm mb-4 line-clamp-2 font-medium">
+            {product.description}
+          </p>
         </div>
 
-        {/* Quantity Selector */}
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2 bg-secondary rounded-lg p-1">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8"
-              onClick={() => setQuantity(Math.max(1, quantity - 1))}
-              disabled={!product.available}
-            >
-              <Minus className="h-4 w-4" />
-            </Button>
-            <span className="w-8 text-center font-semibold">{quantity}</span>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8"
-              onClick={() => setQuantity(quantity + 1)}
-              disabled={!product.available}
-            >
-              <Plus className="h-4 w-4" />
-            </Button>
+        <div>
+          {/* Price */}
+          <div className="flex items-center justify-between mb-4">
+            <span className="font-serif text-2xl font-bold text-primary">
+              ${product.price.toFixed(2)}
+            </span>
           </div>
 
-          <Button
-            onClick={handleAddToOrder}
-            disabled={!product.available}
-            className="flex-1"
-          >
-            Add to Order
-          </Button>
+          {/* Quantity & Order Controls */}
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2 bg-secondary rounded-lg p-1 border border-border">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-secondary-foreground hover:bg-background"
+                onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                disabled={!product.available}
+              >
+                <Minus className="h-4 w-4" />
+              </Button>
+              <span className="w-8 text-center font-bold text-secondary-foreground">{quantity}</span>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-secondary-foreground hover:bg-background"
+                onClick={() => setQuantity(quantity + 1)}
+                disabled={!product.available}
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+            </div>
+
+            <Button
+              onClick={handleAddToOrder}
+              disabled={!product.available}
+              className="flex-1 bg-primary text-primary-foreground font-semibold hover:bg-primary/90 transition-colors shadow-sm"
+            >
+              Add to Order
+            </Button>
+          </div>
         </div>
       </div>
     </motion.div>

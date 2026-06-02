@@ -1,96 +1,100 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
 
-@custom-variant dark (&:is(.dark *));
+@custom-variant dark (&:where(.dark, .dark *));
 
-/* Dark Coffee Shop Theme */
+/* ========================================================
+   1. VALORILE VARIABILELOR (Light Mode - Crem & Latte)
+   ======================================================== */
 :root {
-  --background: oklch(0.12 0.02 50);
-  --foreground: oklch(0.95 0.01 80);
-  --card: oklch(0.16 0.02 50);
-  --card-foreground: oklch(0.95 0.01 80);
-  --popover: oklch(0.14 0.02 50);
-  --popover-foreground: oklch(0.95 0.01 80);
-  --primary: oklch(0.65 0.15 55);
+  --background: oklch(0.97 0.01 60);       
+  --foreground: oklch(0.20 0.04 45);       
+  --card: oklch(0.93 0.02 55);             
+  --card-foreground: oklch(0.20 0.04 45);
+  --popover: oklch(0.95 0.01 60);
+  --popover-foreground: oklch(0.20 0.04 45);
+  --primary: oklch(0.35 0.10 50);          
   --primary-foreground: oklch(0.98 0.01 80);
-  --secondary: oklch(0.22 0.02 50);
-  --secondary-foreground: oklch(0.90 0.01 80);
-  --muted: oklch(0.20 0.02 50);
-  --muted-foreground: oklch(0.65 0.02 80);
-  --accent: oklch(0.55 0.12 45);
+  --secondary: oklch(0.88 0.03 55);        
+  --secondary-foreground: oklch(0.20 0.04 45);
+  --muted: oklch(0.90 0.02 55);
+  --muted-foreground: oklch(0.45 0.04 50);  
+  --accent: oklch(0.50 0.12 55);
   --accent-foreground: oklch(0.98 0.01 80);
   --destructive: oklch(0.55 0.2 25);
   --destructive-foreground: oklch(0.98 0.01 80);
-  --border: oklch(0.28 0.03 50);
-  --input: oklch(0.20 0.02 50);
-  --ring: oklch(0.65 0.15 55);
-  --chart-1: oklch(0.65 0.15 55);
-  --chart-2: oklch(0.55 0.12 45);
-  --chart-3: oklch(0.50 0.10 35);
-  --chart-4: oklch(0.70 0.12 70);
-  --chart-5: oklch(0.60 0.08 90);
+  --border: oklch(0.82 0.03 55);           
+  --input: oklch(0.88 0.02 55);
+  --ring: oklch(0.35 0.10 50);
   --radius: 0.75rem;
-  --sidebar: oklch(0.10 0.02 50);
-  --sidebar-foreground: oklch(0.95 0.01 80);
-  --sidebar-primary: oklch(0.65 0.15 55);
-  --sidebar-primary-foreground: oklch(0.98 0.01 80);
-  --sidebar-accent: oklch(0.22 0.02 50);
-  --sidebar-accent-foreground: oklch(0.90 0.01 80);
-  --sidebar-border: oklch(0.28 0.03 50);
-  --sidebar-ring: oklch(0.65 0.15 55);
   
-  /* Custom coffee theme colors */
-  --coffee: oklch(0.45 0.12 55);
-  --coffee-light: oklch(0.65 0.15 55);
-  --coffee-dark: oklch(0.25 0.08 50);
-  --cream: oklch(0.92 0.03 80);
-  --espresso: oklch(0.20 0.06 45);
-  --caramel: oklch(0.60 0.14 65);
-  --success: oklch(0.55 0.15 145);
-  --warning: oklch(0.70 0.15 85);
-  --table-free: oklch(0.55 0.15 145);
-  --table-occupied: oklch(0.55 0.2 25);
-  --table-reserved: oklch(0.70 0.15 85);
-}
-
-.dark {
-  --background: oklch(0.12 0.02 50);
-  --foreground: oklch(0.95 0.01 80);
-  --card: oklch(0.16 0.02 50);
-  --card-foreground: oklch(0.95 0.01 80);
-  --popover: oklch(0.14 0.02 50);
-  --popover-foreground: oklch(0.95 0.01 80);
-  --primary: oklch(0.65 0.15 55);
-  --primary-foreground: oklch(0.98 0.01 80);
-  --secondary: oklch(0.22 0.02 50);
-  --secondary-foreground: oklch(0.90 0.01 80);
-  --muted: oklch(0.20 0.02 50);
-  --muted-foreground: oklch(0.65 0.02 80);
-  --accent: oklch(0.55 0.12 45);
-  --accent-foreground: oklch(0.98 0.01 80);
-  --destructive: oklch(0.55 0.2 25);
-  --destructive-foreground: oklch(0.98 0.01 80);
-  --border: oklch(0.28 0.03 50);
-  --input: oklch(0.20 0.02 50);
-  --ring: oklch(0.65 0.15 55);
-  --chart-1: oklch(0.65 0.15 55);
-  --chart-2: oklch(0.55 0.12 45);
-  --chart-3: oklch(0.50 0.10 35);
-  --chart-4: oklch(0.70 0.12 70);
-  --chart-5: oklch(0.60 0.08 90);
-  --sidebar: oklch(0.10 0.02 50);
-  --sidebar-foreground: oklch(0.95 0.01 80);
-  --sidebar-primary: oklch(0.65 0.15 55);
+  --sidebar: oklch(0.93 0.02 55);
+  --sidebar-foreground: oklch(0.20 0.04 45);
+  --sidebar-primary: oklch(0.35 0.10 50);
   --sidebar-primary-foreground: oklch(0.98 0.01 80);
-  --sidebar-accent: oklch(0.22 0.02 50);
-  --sidebar-accent-foreground: oklch(0.90 0.01 80);
-  --sidebar-border: oklch(0.28 0.03 50);
-  --sidebar-ring: oklch(0.65 0.15 55);
+  --sidebar-accent: oklch(0.88 0.03 55);
+  --sidebar-accent-foreground: oklch(0.20 0.04 45);
+  --sidebar-border: oklch(0.82 0.03 55);
+  --sidebar-ring: oklch(0.35 0.10 50);
+  
+  /* Culori gradient Light Mode */
+  --coffee: oklch(0.32 0.08 45);
+  --coffee-light: oklch(0.65 0.12 55);
+  --coffee-dark: oklch(0.22 0.06 40);
+  --cream: oklch(0.95 0.02 75);
+  --espresso: oklch(0.25 0.06 45);
+  --caramel: oklch(0.65 0.12 65);
+  
+  --table-free: oklch(0.60 0.18 145);       
+  --table-occupied: oklch(0.55 0.22 25);     
+  --table-reserved: oklch(0.70 0.15 75);     
 }
 
+/* ========================================================
+   2. VALORILE VARIABILELOR (Dark Mode - Espresso Cald)
+   ======================================================== */
+.dark, [data-theme="dark"] {
+  --background: oklch(0.16 0.04 38) !important;
+  --foreground: oklch(0.94 0.02 75) !important;
+  --card: oklch(0.20 0.04 40) !important;
+  --card-foreground: oklch(0.94 0.02 75) !important;
+  --popover: oklch(0.18 0.04 38) !important;
+  --popover-foreground: oklch(0.94 0.02 75) !important;
+  
+  --primary: oklch(0.72 0.13 65) !important;
+  --primary-foreground: oklch(0.15 0.04 45) !important;
+  --secondary: oklch(0.24 0.04 42) !important;
+  --secondary-foreground: oklch(0.94 0.02 75) !important;
+  --muted: oklch(0.20 0.03 40) !important;
+  --muted-foreground: oklch(0.75 0.04 65) !important;
+  --accent: oklch(0.65 0.12 60) !important;
+  --accent-foreground: oklch(0.98 0.01 80) !important;
+  --destructive: oklch(0.55 0.2 25) !important;
+  --destructive-foreground: oklch(0.98 0.01 80) !important;
+  
+  --border: oklch(0.26 0.04 40) !important;
+  --input: oklch(0.20 0.04 40) !important;
+  --ring: oklch(0.72 0.13 65) !important;
+
+  --coffee: oklch(0.18 0.05 38) !important;
+  --coffee-light: oklch(0.32 0.07 48) !important;
+  --coffee-dark: oklch(0.12 0.03 32) !important;
+  --cream: oklch(0.56 0.12 60) !important;
+  --espresso: oklch(0.16 0.04 35) !important;
+  --caramel: oklch(0.72 0.13 65) !important;
+
+  --table-free: oklch(0.72 0.22 145) !important;
+  --table-occupied: oklch(0.62 0.24 25) !important;
+  --table-reserved: oklch(0.76 0.18 70) !important;
+}
+
+/* ========================================================
+   3. APLICARE CONFIGURARE UTILS (Tailwind v4 Setup)
+   ======================================================== */
 @theme inline {
   --font-sans: 'Geist', 'Geist Fallback';
   --font-mono: 'Geist Mono', 'Geist Mono Fallback';
+  
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -110,62 +114,174 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
-  --color-chart-1: var(--chart-1);
-  --color-chart-2: var(--chart-2);
-  --color-chart-3: var(--chart-3);
-  --color-chart-4: var(--chart-4);
-  --color-chart-5: var(--chart-5);
+  
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
-  --color-sidebar: var(--sidebar);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-ring: var(--sidebar-ring);
   
-  /* Custom coffee colors */
   --color-coffee: var(--coffee);
   --color-coffee-light: var(--coffee-light);
   --color-coffee-dark: var(--coffee-dark);
   --color-cream: var(--cream);
   --color-espresso: var(--espresso);
   --color-caramel: var(--caramel);
-  --color-success: var(--success);
-  --color-warning: var(--warning);
+  
   --color-table-free: var(--table-free);
   --color-table-occupied: var(--table-occupied);
   --color-table-reserved: var(--table-reserved);
 }
 
+/* ========================================================
+   4. STILURI DE BAZĂ ȘI DEBLOCARE DEGRADEURI
+   ======================================================== */
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    border-color: var(--border);
   }
+
   body {
-    @apply bg-background text-foreground;
+    color: var(--foreground) !important;
+    transition: background-color 0.4s ease, color 0.4s ease;
+  }
+
+  /* ── LIGHT MODE: fundal animat crem/latte ── */
+  body {
+    background: linear-gradient(
+      135deg,
+      oklch(0.97 0.01 60),
+      oklch(0.93 0.03 65),
+      oklch(0.95 0.02 55),
+      oklch(0.91 0.03 70),
+      oklch(0.96 0.01 58)
+    );
+    background-size: 400% 400%;
+    animation: waveBackground 12s cubic-bezier(0.4, 0, 0.2, 1) infinite alternate;
+  }
+
+  /* Reflexie radială subtilă pe Light Mode */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(
+      ellipse 70% 55% at 50% 25%,
+      oklch(0.99 0.02 80 / 0.45),
+      transparent 65%
+    );
+    pointer-events: none;
+    z-index: 0;
+    animation: pulseGlow 9s ease-in-out infinite alternate;
+  }
+
+  /* ── DARK MODE: fundal animat espresso cald ── */
+  .dark body,
+  [data-theme="dark"] body {
+    background: linear-gradient(
+      135deg,
+      oklch(0.14 0.05 35),
+      oklch(0.22 0.07 48),
+      oklch(0.17 0.05 40),
+      oklch(0.12 0.03 30),
+      oklch(0.20 0.08 52)
+    ) !important;
+    background-size: 400% 400% !important;
+    animation: waveBackground 12s cubic-bezier(0.4, 0, 0.2, 1) infinite alternate !important;
+  }
+
+  /* Reflexie radială caldă pe Dark Mode (efect lumânare) */
+  .dark body::before,
+  [data-theme="dark"] body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(
+      ellipse 80% 60% at 50% 30%,
+      oklch(0.30 0.09 52 / 0.22),
+      transparent 70%
+    );
+    pointer-events: none;
+    z-index: 0;
+    animation: pulseGlow 8s ease-in-out infinite alternate;
+  }
+
+  /* Asigură că conținutul e deasupra pseudo-elementului ::before */
+  body > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Dacă există clase de gradient Tailwind, dezactivează bg-ul solid */
+  body:has(.bg-gradient-to-tr),
+  body:has(.bg-gradient-to-br) {
+    background-color: transparent !important;
+  }
+
+  .bg-gradient-to-tr,
+  .bg-gradient-to-br {
+    background-size: 200% 200% !important;
+    animation: waveBackground 12s cubic-bezier(0.4, 0, 0.2, 1) infinite alternate !important;
   }
 }
 
-/* Custom scrollbar for dark theme */
+/* ========================================================
+   5. KEYFRAMES ANIMAȚII
+   ======================================================== */
+@keyframes waveBackground {
+  0%   { background-position: 0% 50%; }
+  100% { background-position: 100% 50%; }
+}
+
+@keyframes pulseGlow {
+  0%   { opacity: 0.55; transform: scale(1) translateY(0); }
+  100% { opacity: 1;    transform: scale(1.08) translateY(-2%); }
+}
+
+/* ========================================================
+   6. CUSTOM SCROLLBAR
+   ======================================================== */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
-
 ::-webkit-scrollbar-track {
-  background: oklch(0.16 0.02 50);
+  background: var(--background);
 }
-
 ::-webkit-scrollbar-thumb {
-  background: oklch(0.35 0.05 55);
+  background: var(--border);
   border-radius: 4px;
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: oklch(0.45 0.08 55);
+/* ========================================================
+   ANIMAȚII SPECIALE PENTRU BULELE DIN HERO (image_395427.png)
+   ======================================================== */
+@keyframes pulseSlow {
+  0%, 100% {
+    transform: scale(1) translate(0px, 0px);
+    opacity: 0.4;
+  }
+  50% {
+    transform: scale(1.2) translate(20px, -30px);
+    opacity: 0.8;
+  }
+}
+
+@keyframes floatSlow {
+  0%, 100% {
+    transform: scale(1.1) translate(0px, 0px);
+    opacity: 0.5;
+  }
+  50% {
+    transform: scale(0.9) translate(-40px, 40px);
+    opacity: 0.3;
+  }
+}
+
+/* Legăm clasele din cod de animațiile CSS */
+.animate-pulse {
+  animation: pulseSlow 8s ease-in-out infinite alternate !important;
+}
+
+.animate-bounce {
+  animation: floatSlow 14s ease-in-out infinite alternate !important;
 }

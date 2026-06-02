@@ -1,4 +1,4 @@
- 'use client';
+'use client';
 
 import { motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
@@ -10,13 +10,28 @@ import { Button } from '@/components/ui/button';
 export function HeroSection() {
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
-      {/* Background with overlay */}
+      {/* Background cu overlay */}
       <div className="absolute inset-0 bg-gradient-to-br from-espresso via-background to-coffee-dark" />
       
-      {/* Animated coffee beans decoration (render only on client to avoid hydration mismatch) */}
+      {/* ========================================================
+         BULE ANIMATE ULTRA-INTENSE (ORBS) - EFFECT WOW DEFINITIV
+         ======================================================== */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
+        
+        {/* Proiectorul Principal 1: Poziționat FIX în centrul ecranului, extrem de luminos (Auriu/Cream) */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[350px] rounded-full bg-cream/40 dark:bg-cream/35 blur-[60px] animate-bounce duration-[10s] ease-in-out infinite" />
+        
+        {/* Proiectorul Auxiliar 2: Caramel vibrant care dansează pe diagonală pentru a sparge monotonia */}
+        <div className="absolute top-[30%] left-[30%] w-[400px] h-[400px] rounded-full bg-caramel/45 dark:bg-caramel/35 blur-[70px] animate-pulse duration-[6s] ease-in-out infinite" />
+        
+        {/* Proiectorul Auxiliar 3: O pată caldă în zona de butoane/statistici */}
+        <div className="absolute bottom-[20%] right-[20%] w-[450px] h-[300px] rounded-full bg-primary/35 dark:bg-primary/25 blur-[80px] animate-pulse duration-[8s] ease-in-out infinite" />
+      </div>
+
+      {/* Animated coffee beans decoration */}
       <ClientAnimatedBeans />
 
-      {/* Content */}
+      {/* Content - Z-10 ridică textul curat deasupra luminilor */}
       <div className="relative z-10 container mx-auto px-4 pt-20">
         <div className="max-w-4xl mx-auto text-center">
           <motion.div
